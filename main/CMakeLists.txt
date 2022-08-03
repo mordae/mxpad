@@ -7,5 +7,7 @@ idf_component_register(
 		"."
 
 	PRIV_REQUIRES
-		"led_strip"
+		driver
+		led_strip
+		esp_adc
 )

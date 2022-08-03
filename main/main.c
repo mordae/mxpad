@@ -20,10 +20,21 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+
+#include "driver/gpio.h"
+#include "esp_adc/adc_oneshot.h"
 #include "esp_log.h"
 
 
 static const char *tag = "main";
+
+
+/* Configured ADC1. */
+static adc_oneshot_unit_handle_t adc1;
+
+
+/* Amount of ambient light. */
+static float ambient_light = 0.5;
 
 
 static void led_loop(void *arg)
@@ -41,7 +52,9 @@ static void led_loop(void *arg)
 
 	while (1) {
 		uint8_t r, g, b;
-		hsv2rgb(hue += CONFIG_LED_STEP_HUE / 10.0f, CONFIG_LED_SATURATION / 100.0f, CONFIG_LED_VALUE / 100.0f, &r, &g, &b);
+		float value = ambient_light * CONFIG_LED_VALUE / 100.0f;
+		float saturation = CONFIG_LED_SATURATION / 100.0f;
+		hsv2rgb(hue += CONFIG_LED_STEP_HUE / 10.0f, saturation, value, &r, &g, &b);
 		ESP_ERROR_CHECK(led_strip_set_pixel(led, 0, r, g, b));
 		ESP_ERROR_CHECK(led_strip_refresh(led));
 		vTaskDelay(pdMS_TO_TICKS(CONFIG_LED_STEP_MS));
@@ -49,11 +62,64 @@ static void led_loop(void *arg)
 }
 
 
-void app_main(void)
+static void light_sensor_loop(void *arg)
 {
-	xTaskCreate(led_loop, "led_loop", 4096, NULL, 0, NULL);
+	ESP_LOGI(tag, "Configure light sensor...");
+	adc_oneshot_chan_cfg_t config = {
+		.bitwidth = ADC_BITWIDTH_13,
+		.atten = ADC_ATTEN_DB_11,
+	};
+	ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1, 0, &config));
 
 	while (1) {
-		vTaskDelay(10000);
+		int value;
+		ESP_ERROR_CHECK(adc_oneshot_read(adc1, 0, &value));
+
+		float amount = 0.1f + 0.9f * value / 8191.0f;
+
+		ambient_light = 0.9f * ambient_light + 0.1f * amount;
+		vTaskDelay(pdMS_TO_TICKS(100));
+	}
+}
+
+
+static void button_loop(void *arg)
+{
+	gpio_config_t gpio = {
+		.pin_bit_mask = BIT64(45),
+		.intr_type = GPIO_INTR_DISABLE,
+		.mode = GPIO_MODE_INPUT,
+		.pull_down_en = 0,
+		.pull_up_en = 1,
+	};
+	ESP_ERROR_CHECK(gpio_config(&gpio));
+
+	while (1) {
+		int btn1 = !gpio_get_level(45);
+
+		if (btn1) {
+			ESP_LOGI(tag, "Buttons: btn1=%i", btn1);
+		}
+
+		vTaskDelay(pdMS_TO_TICKS(50));
+	}
+}
+
+
+void app_main(void)
+{
+	ESP_LOGI(tag, "Configure ADC1...");
+	adc_oneshot_unit_init_cfg_t adc1_config = {
+		.unit_id = ADC_UNIT_1,
+		.ulp_mode = false,
+	};
+	ESP_ERROR_CHECK(adc_oneshot_new_unit(&adc1_config, &adc1));
+
+	xTaskCreate(light_sensor_loop, "light_sensor_loop", 4096, NULL, 0, NULL);
+	xTaskCreate(led_loop, "led_loop", 4096, NULL, 0, NULL);
+	xTaskCreate(button_loop, "button_loop", 4096, NULL, 0, NULL);
+
+	while (1) {
+		vTaskDelay(pdMS_TO_TICKS(10000));
 	}
 }
