@@ -1,20 +1,24 @@
 menu "MXPAD"
 
-	menu "Status LED (WS2812)"
+	menuconfig LED
+		bool "Status LED (WS2812)"
+		default y
+
+	if LED
 		config LED_GPIO
 			int "GPIO pin"
 			default 18
 			range 0 46
 
 		config LED_STEP_MS
-			int "Speed for loops"
+			int "Loop step in ms"
 			range 10 100
 			default 30
 
 		config LED_STEP_HUE
-			int "Hue step for loops"
+			int "Loop step in 1/10 of hue degrees"
 			range 1 3600
-			default 3
+			default 6
 
 		config LED_SATURATION
 			int "Saturation"
@@ -22,10 +26,22 @@ menu "MXPAD"
 			default 100
 
 		config LED_VALUE
-			int "Value"
+			int "Maximum value"
 			range 1 100
 			default 15
+			help
+				Will be adjusted by the Light Sensor, if enabled.
+	endif
 
-	endmenu
+	menuconfig LIGHT
+		bool "Light Sensor"
+		default y
+
+	if LIGHT
+		config LIGHT_ADC1_CHANNEL
+			int "ADC1 channel"
+			default 0
+			range 0 9
+	endif
 
 endmenu

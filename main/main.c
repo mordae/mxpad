@@ -33,10 +33,13 @@ static const char *tag = "main";
 static adc_oneshot_unit_handle_t adc1;
 
 
+#ifdef CONFIG_LED
 /* Amount of ambient light. */
-static float ambient_light = 0.5;
+static float ambient_light = 1.0;
+#endif
 
 
+#ifdef CONFIG_LED
 static void led_loop(void *arg)
 {
 	led_strip_handle_t led;
@@ -60,8 +63,10 @@ static void led_loop(void *arg)
 		vTaskDelay(pdMS_TO_TICKS(CONFIG_LED_STEP_MS));
 	}
 }
+#endif
 
 
+#ifdef CONFIG_LIGHT
 static void light_sensor_loop(void *arg)
 {
 	ESP_LOGI(tag, "Configure light sensor...");
@@ -81,6 +86,7 @@ static void light_sensor_loop(void *arg)
 		vTaskDelay(pdMS_TO_TICKS(100));
 	}
 }
+#endif
 
 
 static void button_loop(void *arg)
@@ -115,8 +121,14 @@ void app_main(void)
 	};
 	ESP_ERROR_CHECK(adc_oneshot_new_unit(&adc1_config, &adc1));
 
+#ifdef CONFIG_LIGHT
 	xTaskCreate(light_sensor_loop, "light_sensor_loop", 4096, NULL, 0, NULL);
+#endif
+
+#ifdef CONFIG_LED
 	xTaskCreate(led_loop, "led_loop", 4096, NULL, 0, NULL);
+#endif
+
 	xTaskCreate(button_loop, "button_loop", 4096, NULL, 0, NULL);
 
 	while (1) {
