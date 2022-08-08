@@ -38,10 +38,109 @@ menu "MXPAD"
 		default y
 
 	if LIGHT
-		config LIGHT_ADC1_CHANNEL
+		config LIGHT_CHAN
 			int "ADC1 channel"
 			default 0
 			range 0 9
 	endif
+
+	menuconfig JOY_L
+		bool "Left Joystick"
+		default y
+
+	if JOY_L
+		config JOY_L_CHAN_X
+			int "X-axis ADC1 channel"
+			default 2
+			range 0 9
+
+		config JOY_L_CHAN_Y
+			int "Y-axis ADC1 channel"
+			default 3
+			range 0 9
+
+		config JOY_L_BTN
+			int "Button GPIO"
+			default 11
+			range 0 46
+	endif
+
+	menuconfig JOY_R
+		bool "Right Joystick"
+		default y
+
+	if JOY_R
+		config JOY_R_CHAN_X
+			int "X-axis ADC1 channel"
+			default 4
+			range 0 9
+
+		config JOY_R_CHAN_Y
+			int "Y-axis ADC1 channel"
+			default 5
+			range 0 9
+
+		config JOY_R_BTN
+			int "Button GPIO"
+			default 12
+			range 0 46
+	endif
+
+	menu "Buttons"
+		config BTN_A
+			int "GPIO for Button A"
+			default 45
+			range 0 46
+
+		config BTN_B
+			int "GPIO for Button B"
+			default 44
+			range 0 46
+
+		config BTN_X
+			int "GPIO for Button X"
+			default 42
+			range 0 46
+
+		config BTN_Y
+			int "GPIO for Button Y"
+			default 43
+			range 0 46
+
+		config BTN_DOWN
+			int "GPIO for Button DOWN"
+			default 12
+			range 0 46
+
+		config BTN_RIGHT
+			int "GPIO for Button RIGHT"
+			default 13
+			range 0 46
+
+		config BTN_LEFT
+			int "GPIO for Button LEFT"
+			default 14
+			range 0 46
+
+		config BTN_UP
+			int "GPIO for Button UP"
+			default 15
+			range 0 46
+
+		config BTN_START
+			int "GPIO for Button START"
+			default 16
+			range 0 46
+
+		config BTN_SELECT
+			int "GPIO for Button SELECT"
+			default 39
+			range 0 46
+
+		config BTN_HOME
+			int "GPIO for Button HOME"
+			default 41
+			range 0 46
+	endmenu
 
 endmenu
