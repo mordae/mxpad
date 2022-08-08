@@ -32,8 +32,10 @@
 static const char tag[] = "xinput";
 
 
-static uint8_t endpoint_in = 0;
-static uint8_t endpoint_out = 0;
+static uint8_t ep_tx = 0;
+static uint8_t ep_rx = 0;
+
+static struct xinput_feedback feedback = {0};
 
 
 void (*xinput_receive_feedback_cb)(struct xinput_feedback *feedback) = NULL;
@@ -126,23 +128,9 @@ void xinput_loop(void *arg)
 	ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
 
 	while (1) {
-		bool more = true;
-
-		while (more && tud_ready() && usbd_edpt_ready(0, endpoint_out)) {
-			struct xinput_feedback buf = {0};
-			usbd_edpt_claim(0, endpoint_out);
-			more = usbd_edpt_xfer(0, endpoint_out, (void *)(&buf), 20);
-			usbd_edpt_release(0, endpoint_out);
-
-			if (buf.size == 0) {
-				ESP_LOGI(tag, "Received zero-length packet");
-				continue;
-			}
-
-			ESP_LOGI(tag, "Received feedback (type=%hhu, size=%hhu)", buf.type, buf.size);
-
-			if (xinput_receive_feedback_cb)
-				xinput_receive_feedback_cb(&buf);
+		if (tud_ready() && usbd_edpt_ready(0, ep_rx)) {
+			usbd_edpt_claim(0, ep_rx);
+			usbd_edpt_xfer(0, ep_rx, (void *)(&feedback), sizeof(feedback));
 		}
 
 		vTaskDelay(pdMS_TO_TICKS(16));
@@ -153,7 +141,7 @@ void xinput_loop(void *arg)
 void xinput_send_state(struct xinput_state *state)
 {
 	/* Do nothing unless ready. */
-	if (!tud_ready() || !endpoint_in || !usbd_edpt_ready(0, endpoint_in))
+	if (!tud_ready() || !ep_tx || !usbd_edpt_ready(0, ep_tx))
 		return;
 
 	/* Make sure the header is sane. */
@@ -165,9 +153,8 @@ void xinput_send_state(struct xinput_state *state)
 		tud_remote_wakeup();
 
 	/* Transmit. */
-	usbd_edpt_claim(0, endpoint_in);
-	usbd_edpt_xfer(0, endpoint_in, (void *)(state), state->size);
-	usbd_edpt_release(0, endpoint_in);
+	usbd_edpt_claim(0, ep_tx);
+	usbd_edpt_xfer(0, ep_tx, (void *)(state), state->size);
 }
 
 
@@ -200,11 +187,11 @@ static uint16_t xinput_open(uint8_t rhport, tusb_desc_interface_t const *itf, ui
 			TU_ASSERT(usbd_edpt_open(rhport, desc_ep));
 
 			if (tu_edpt_dir(desc_ep->bEndpointAddress) == TUSB_DIR_IN) {
-				endpoint_in = desc_ep->bEndpointAddress;
-				ESP_LOGI(tag, "endpoint_in = %hhu", endpoint_in);
+				ep_tx = desc_ep->bEndpointAddress;
+				ESP_LOGI(tag, "ep_tx = %hhu", ep_tx);
 			} else {
-				endpoint_out = desc_ep->bEndpointAddress;
-				ESP_LOGI(tag, "endpoint_out = %hhu", endpoint_out);
+				ep_rx = desc_ep->bEndpointAddress;
+				ESP_LOGI(tag, "ep_rx = %hhu", ep_rx);
 			}
 
 			found += 1;
@@ -226,10 +213,32 @@ static bool xinput_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_r
 
 static bool xinput_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result, uint32_t len)
 {
-	if (ep_addr != endpoint_out)
+	if (ep_addr != ep_rx)
 		return true;
 
 	ESP_LOGI(tag, "Incoming XFER (len=%lu, result=%u)", len, result);
+
+	if (result != XFER_RESULT_SUCCESS) {
+		ESP_LOGE(tag, "XFER Failed.");
+		return false;
+	}
+
+	if (len == 0) {
+		ESP_LOGW(tag, "Received zero-length packet.");
+		return true;
+	}
+
+	ESP_LOGI(tag, "Received feedback (type=%hhu, size=%hhu)", feedback.type, feedback.size);
+
+	if (xinput_receive_feedback_cb) {
+		if (XINPUT_LED == feedback.type) {
+			if (feedback.led > XINPUT_LED_ALTERNATE)
+				feedback.led = XINPUT_LED_OFF;
+		}
+
+		xinput_receive_feedback_cb(&feedback);
+	}
+
 	return true;
 }
 

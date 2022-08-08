@@ -112,6 +112,8 @@ inline static enum xinput_led xinput_led_next(enum xinput_led led, enum xinput_l
 		case XINPUT_LED_ALTERNATE:
 			return prev;
 	}
+
+	return XINPUT_LED_OFF;
 }
 
 

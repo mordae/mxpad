@@ -10,16 +10,6 @@ menu "MXPAD"
 			default 18
 			range 0 46
 
-		config LED_STEP_MS
-			int "Loop step in ms"
-			range 10 100
-			default 30
-
-		config LED_STEP_HUE
-			int "Loop step in 1/10 of hue degrees"
-			range 1 3600
-			default 6
-
 		config LED_SATURATION
 			int "Saturation"
 			range 1 100

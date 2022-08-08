@@ -38,8 +38,14 @@ static adc_oneshot_unit_handle_t adc1;
 
 
 #ifdef CONFIG_LED
+static led_strip_handle_t led;
+
 /* Amount of ambient light. */
-static float ambient_light = 1.0;
+static volatile float ambient_light = 1.0;
+
+/* LED pattern from host. And the previous one. */
+static volatile enum xinput_led led_pattern = 0;
+static volatile enum xinput_led led_pattern_prev = 0;
 #endif
 
 
@@ -128,10 +134,28 @@ send:
 
 
 #ifdef CONFIG_LED
+static void led_xinput_feedback_cb(struct xinput_feedback *feedback)
+{
+	led_pattern_prev = xinput_led_next(led_pattern, led_pattern_prev);
+	led_pattern = feedback->led;
+
+	ESP_LOGI(tag, "LED pattern=%u, prev=%u", led_pattern, led_pattern_prev);
+}
+
+
+static void led_set_hue(float hue)
+{
+	uint8_t r, g, b;
+	float value = ambient_light * CONFIG_LED_VALUE / 100.0f;
+	float saturation = CONFIG_LED_SATURATION / 100.0f;
+	hsv2rgb(hue, saturation, value, &r, &g, &b);
+	ESP_ERROR_CHECK(led_strip_set_pixel(led, 0, r, g, b));
+	ESP_ERROR_CHECK(led_strip_refresh(led));
+}
+
+
 static void led_loop(void *arg)
 {
-	led_strip_handle_t led;
-
 	ESP_LOGI(tag, "Configure LED...");
 	led_strip_config_t config = {
 		.strip_gpio_num = CONFIG_LED_GPIO,
@@ -139,17 +163,129 @@ static void led_loop(void *arg)
 	};
 	ESP_ERROR_CHECK(led_strip_new_rmt_device(&config, &led));
 
-	float hue = 0;
+	float red = 0.0;
+	float orange = 45.0;
+	float yellow = 60.0;
+	float green = 120.0;
+	float turqoise = 180;
+	float blue = 240.0;
+	float purple = 270.0;
 
-	while (1) {
-		uint8_t r, g, b;
-		float value = ambient_light * CONFIG_LED_VALUE / 100.0f;
-		float saturation = CONFIG_LED_SATURATION / 100.0f;
-		hsv2rgb(hue += CONFIG_LED_STEP_HUE / 10.0f, saturation, value, &r, &g, &b);
-		ESP_ERROR_CHECK(led_strip_set_pixel(led, 0, r, g, b));
-		ESP_ERROR_CHECK(led_strip_refresh(led));
-		vTaskDelay(pdMS_TO_TICKS(CONFIG_LED_STEP_MS));
+	int i;
+
+	void *state[] = {
+		&&off, &&blink, &&flash1, &&flash2, &&flash3, &&flash4,
+		&&just1, &&just2, &&just3, &&just4, &&spin,
+		&&blink_slow, &&blink_fast, &&alternate,
+	};
+
+	goto *state[led_pattern];
+
+next:
+	led_pattern = xinput_led_next(led_pattern, led_pattern_prev);
+	goto *state[led_pattern];
+
+off:
+	led_set_hue(purple);
+	vTaskDelay(pdMS_TO_TICKS(100));
+	goto next;
+
+blink:
+	led_set_hue(green);
+	vTaskDelay(pdMS_TO_TICKS(500));
+	led_set_hue(red);
+	vTaskDelay(pdMS_TO_TICKS(500));
+	goto next;
+
+flash1:
+	for (i = 0; i < 3; i++) {
+		led_set_hue(green);
+		vTaskDelay(pdMS_TO_TICKS(400));
+		led_set_hue(purple);
+		vTaskDelay(pdMS_TO_TICKS(100));
 	}
+	goto next;
+
+just1:
+	led_set_hue(green);
+	vTaskDelay(pdMS_TO_TICKS(500));
+	goto next;
+
+flash2:
+	for (i = 0; i < 3; i++) {
+		led_set_hue(red);
+		vTaskDelay(pdMS_TO_TICKS(400));
+		led_set_hue(purple);
+		vTaskDelay(pdMS_TO_TICKS(100));
+	}
+	goto next;
+
+just2:
+	led_set_hue(red);
+	vTaskDelay(pdMS_TO_TICKS(500));
+	goto next;
+
+flash3:
+	for (i = 0; i < 3; i++) {
+		led_set_hue(blue);
+		vTaskDelay(pdMS_TO_TICKS(400));
+		led_set_hue(purple);
+		vTaskDelay(pdMS_TO_TICKS(100));
+	}
+	goto next;
+
+just3:
+	led_set_hue(blue);
+	vTaskDelay(pdMS_TO_TICKS(500));
+	goto next;
+
+flash4:
+	for (i = 0; i < 3; i++) {
+		led_set_hue(yellow);
+		vTaskDelay(pdMS_TO_TICKS(400));
+		led_set_hue(purple);
+		vTaskDelay(pdMS_TO_TICKS(100));
+	}
+	goto next;
+
+just4:
+	led_set_hue(yellow);
+	vTaskDelay(pdMS_TO_TICKS(500));
+	goto next;
+
+spin:
+	for (i = 0; i < 360; i += 10) {
+		led_set_hue(i);
+		vTaskDelay(pdMS_TO_TICKS(30));
+	}
+	goto next;
+
+blink_slow:
+	for (i = 0; i < 5; i++) {
+		led_set_hue(orange);
+		vTaskDelay(pdMS_TO_TICKS(400));
+		led_set_hue(purple);
+		vTaskDelay(pdMS_TO_TICKS(100));
+	}
+	goto next;
+
+blink_fast:
+	for (i = 0; i < 5; i++) {
+		led_set_hue(turqoise);
+		vTaskDelay(pdMS_TO_TICKS(400));
+		led_set_hue(purple);
+		vTaskDelay(pdMS_TO_TICKS(100));
+	}
+	goto next;
+
+alternate:
+	for (i = 0; i < 5; i++) {
+		led_set_hue(orange);
+		vTaskDelay(pdMS_TO_TICKS(500));
+		led_set_hue(turqoise);
+		vTaskDelay(pdMS_TO_TICKS(500));
+	}
+	goto next;
 }
 #endif
 
@@ -342,6 +478,7 @@ void app_main(void)
 #endif
 
 #ifdef CONFIG_LED
+	xinput_receive_feedback_cb = led_xinput_feedback_cb;
 	xTaskCreate(led_loop, "led_loop", 4096, NULL, 0, NULL);
 #endif
 
