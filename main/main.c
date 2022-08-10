@@ -44,8 +44,8 @@ static led_strip_handle_t led;
 static volatile float ambient_light = 1.0;
 
 /* LED pattern from host. And the previous one. */
-static volatile enum xinput_led led_pattern = 0;
-static volatile enum xinput_led led_pattern_prev = 0;
+static volatile enum xinput_led led_pattern = XINPUT_LED_SPIN;
+static volatile enum xinput_led led_pattern_prev = XINPUT_LED_OFF;
 #endif
 
 
@@ -136,6 +136,10 @@ send:
 #if defined(CONFIG_LED)
 static void led_xinput_feedback_cb(struct xinput_feedback *feedback)
 {
+	/* We only handle the LED. No rumble motors. */
+	if (0x01 != feedback->type)
+		return;
+
 	led_pattern_prev = xinput_led_next(led_pattern, led_pattern_prev);
 	led_pattern = feedback->led;
 	ESP_LOGI(tag, "LED pattern=%u, prev=%u", led_pattern, led_pattern_prev);
@@ -149,6 +153,13 @@ static void led_set_hue(float hue)
 	float saturation = CONFIG_LED_SATURATION / 100.0f;
 	hsv2rgb(hue, saturation, value, &r, &g, &b);
 	ESP_ERROR_CHECK(led_strip_set_pixel(led, 0, r, g, b));
+	ESP_ERROR_CHECK(led_strip_refresh(led));
+}
+
+
+static void led_off(void)
+{
+	ESP_ERROR_CHECK(led_strip_set_pixel(led, 0, 0, 0, 0));
 	ESP_ERROR_CHECK(led_strip_refresh(led));
 }
 
@@ -168,7 +179,6 @@ static void led_loop(void *arg)
 	float green = 120.0;
 	float turqoise = 180;
 	float blue = 240.0;
-	float purple = 270.0;
 
 	int i;
 
@@ -185,7 +195,7 @@ next:
 	goto *state[led_pattern];
 
 off:
-	led_set_hue(purple);
+	led_off();
 	vTaskDelay(pdMS_TO_TICKS(100));
 	goto next;
 
@@ -200,7 +210,7 @@ flash1:
 	for (i = 0; i < 3; i++) {
 		led_set_hue(green);
 		vTaskDelay(pdMS_TO_TICKS(400));
-		led_set_hue(purple);
+		led_off();
 		vTaskDelay(pdMS_TO_TICKS(100));
 	}
 	goto next;
@@ -214,7 +224,7 @@ flash2:
 	for (i = 0; i < 3; i++) {
 		led_set_hue(red);
 		vTaskDelay(pdMS_TO_TICKS(400));
-		led_set_hue(purple);
+		led_off();
 		vTaskDelay(pdMS_TO_TICKS(100));
 	}
 	goto next;
@@ -228,7 +238,7 @@ flash3:
 	for (i = 0; i < 3; i++) {
 		led_set_hue(blue);
 		vTaskDelay(pdMS_TO_TICKS(400));
-		led_set_hue(purple);
+		led_off();
 		vTaskDelay(pdMS_TO_TICKS(100));
 	}
 	goto next;
@@ -242,7 +252,7 @@ flash4:
 	for (i = 0; i < 3; i++) {
 		led_set_hue(yellow);
 		vTaskDelay(pdMS_TO_TICKS(400));
-		led_set_hue(purple);
+		led_off();
 		vTaskDelay(pdMS_TO_TICKS(100));
 	}
 	goto next;
@@ -263,7 +273,7 @@ blink_slow:
 	for (i = 0; i < 5; i++) {
 		led_set_hue(orange);
 		vTaskDelay(pdMS_TO_TICKS(400));
-		led_set_hue(purple);
+		led_off();
 		vTaskDelay(pdMS_TO_TICKS(100));
 	}
 	goto next;
@@ -272,7 +282,7 @@ blink_fast:
 	for (i = 0; i < 5; i++) {
 		led_set_hue(turqoise);
 		vTaskDelay(pdMS_TO_TICKS(400));
-		led_set_hue(purple);
+		led_off();
 		vTaskDelay(pdMS_TO_TICKS(100));
 	}
 	goto next;
