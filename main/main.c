@@ -37,7 +37,7 @@ static const char *tag = "main";
 static adc_oneshot_unit_handle_t adc1;
 
 
-#ifdef CONFIG_LED
+#if defined(CONFIG_LED)
 static led_strip_handle_t led;
 
 /* Amount of ambient light. */
@@ -133,12 +133,11 @@ send:
 }
 
 
-#ifdef CONFIG_LED
+#if defined(CONFIG_LED)
 static void led_xinput_feedback_cb(struct xinput_feedback *feedback)
 {
 	led_pattern_prev = xinput_led_next(led_pattern, led_pattern_prev);
 	led_pattern = feedback->led;
-
 	ESP_LOGI(tag, "LED pattern=%u, prev=%u", led_pattern, led_pattern_prev);
 }
 
@@ -290,7 +289,7 @@ alternate:
 #endif
 
 
-#ifdef CONFIG_LIGHT
+#if defined(CONFIG_LIGHT)
 static void light_sensor_loop(void *arg)
 {
 	ESP_LOGI(tag, "Configure light sensor...");
@@ -322,10 +321,10 @@ static void button_loop(void *arg)
 		              | BIT64(CONFIG_BTN_START)
 		              | BIT64(CONFIG_BTN_SELECT)
 		              | BIT64(CONFIG_BTN_HOME)
-#ifdef CONFIG_JOY_L_BTN
+#if defined(CONFIG_JOY_L_BTN)
 			      | BIT64(CONFIG_JOY_L_BTN)
 #endif
-#ifdef CONFIG_JOY_R_BTN
+#if defined(CONFIG_JOY_R_BTN)
 			      | BIT64(CONFIG_JOY_R_BTN)
 #endif
 			      ,
@@ -349,12 +348,12 @@ static void button_loop(void *arg)
 		state.btn_select = !gpio_get_level(CONFIG_BTN_SELECT);
 		state.btn_home = !gpio_get_level(CONFIG_BTN_HOME);
 
-#ifdef CONFIG_JOY_L_BTN
+#if defined(CONFIG_JOY_L_BTN)
 		state.btn_j1 = !gpio_get_level(CONFIG_JOY_L_BTN);
 #else
 		state.btn_j1 = 0;
 #endif
-#ifdef CONFIG_JOY_R_BTN
+#if defined(CONFIG_JOY_R_BTN)
 		state.btn_j2 = !gpio_get_level(CONFIG_JOY_R_BTN);
 #else
 		state.btn_j2 = 0;
@@ -391,13 +390,13 @@ static void joy_loop(void *arg)
 {
 	ESP_LOGI(tag, "Configure joysticks...");
 
-#ifdef CONFIG_JOY_L
+#if defined(CONFIG_JOY_L)
 	configure_adc1_channel(CONFIG_JOY_L_CHAN_X);
 	configure_adc1_channel(CONFIG_JOY_L_CHAN_Y);
 	int cal_lx = 0, cal_ly = 0;
 #endif
 
-#ifdef CONFIG_JOY_R
+#if defined(CONFIG_JOY_R)
 	configure_adc1_channel(CONFIG_JOY_R_CHAN_X);
 	configure_adc1_channel(CONFIG_JOY_R_CHAN_Y);
 	int cal_rx = 0, cal_ry = 0;
@@ -407,7 +406,7 @@ static void joy_loop(void *arg)
 	int calibration = 30;
 
 	while (1) {
-#ifdef CONFIG_JOY_L
+#if defined(CONFIG_JOY_L)
 		int lx = -(read_adc1_channel(CONFIG_JOY_L_CHAN_X) - 4096) * 8;
 		int ly = (read_adc1_channel(CONFIG_JOY_L_CHAN_Y) - 4096) * 8;
 
@@ -423,7 +422,7 @@ static void joy_loop(void *arg)
 		}
 #endif
 
-#ifdef CONFIG_JOY_R
+#if defined(CONFIG_JOY_R)
 		int rx = -(read_adc1_channel(CONFIG_JOY_R_CHAN_X) - 4096) * 8;
 		int ry = (read_adc1_channel(CONFIG_JOY_R_CHAN_Y) - 4096) * 8;
 
@@ -473,11 +472,11 @@ void app_main(void)
 	};
 	ESP_ERROR_CHECK(gpio_config(&hack));
 
-#ifdef CONFIG_LIGHT
+#if defined(CONFIG_LIGHT)
 	xTaskCreate(light_sensor_loop, "light_sensor_loop", 4096, NULL, 0, NULL);
 #endif
 
-#ifdef CONFIG_LED
+#if defined(CONFIG_LED)
 	xinput_receive_feedback_cb = led_xinput_feedback_cb;
 	xTaskCreate(led_loop, "led_loop", 4096, NULL, 0, NULL);
 #endif
