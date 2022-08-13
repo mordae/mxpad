@@ -417,8 +417,20 @@ static void joy_loop(void *arg)
 
 	while (1) {
 #if defined(CONFIG_JOY_L)
-		int lx = -(read_adc1_channel(CONFIG_JOY_L_CHAN_X) - 4096) * 8;
-		int ly = (read_adc1_channel(CONFIG_JOY_L_CHAN_Y) - 4096) * 8;
+# if defined(CONFIG_JOY_L_INVERT_X
+		int lx_sign = -1;
+# else
+		int lx_sign = +1;
+# endif
+
+# if defined(CONFIG_JOY_L_INVERT_Y)
+		int ly_sign = -1;
+# else
+		int ly_sign = +1;
+# endif
+
+		int lx = lx_sign * (read_adc1_channel(CONFIG_JOY_L_CHAN_X) - 4096) * 8;
+		int ly = ly_sign * (read_adc1_channel(CONFIG_JOY_L_CHAN_Y) - 4096) * 8;
 
 		if (calibration > 0) {
 			cal_lx = (7 * cal_lx + lx) / 8;
@@ -433,8 +445,19 @@ static void joy_loop(void *arg)
 #endif
 
 #if defined(CONFIG_JOY_R)
-		int rx = -(read_adc1_channel(CONFIG_JOY_R_CHAN_X) - 4096) * 8;
-		int ry = (read_adc1_channel(CONFIG_JOY_R_CHAN_Y) - 4096) * 8;
+# if defined(CONFIG_JOY_R_INVERT_X
+		int rx_sign = -1;
+# else
+		int rx_sign = +1;
+# endif
+
+# if defined(CONFIG_JOY_R_INVERT_Y)
+		int ry_sign = -1;
+# else
+		int ry_sign = +1;
+# endif
+		int rx = rx_sign * (read_adc1_channel(CONFIG_JOY_R_CHAN_X) - 4096) * 8;
+		int ry = ry_sign * (read_adc1_channel(CONFIG_JOY_R_CHAN_Y) - 4096) * 8;
 
 		if (calibration > 0) {
 			cal_rx = (7 * cal_rx + rx) / 8;

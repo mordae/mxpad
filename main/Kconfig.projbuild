@@ -44,10 +44,18 @@ menu "MXPAD"
 			default 2
 			range 0 9
 
+		config JOY_L_INVERT_X
+			bool "Invert X-axis"
+			default y
+
 		config JOY_L_CHAN_Y
 			int "Y-axis ADC1 channel"
 			default 3
 			range 0 9
+
+		config JOY_L_INVERT_Y
+			int "Invert Y-axis"
+			default n
 
 		config JOY_L_BTN
 			int "Button GPIO"
@@ -65,10 +73,18 @@ menu "MXPAD"
 			default 4
 			range 0 9
 
+		config JOY_R_INVERT_X
+			bool "Invert X-axis"
+			default y
+
 		config JOY_R_CHAN_Y
 			int "Y-axis ADC1 channel"
 			default 5
 			range 0 9
+
+		config JOY_R_INVERT_Y
+			bool "Invert Y-axis"
+			default n
 
 		config JOY_R_BTN
 			int "Button GPIO"
