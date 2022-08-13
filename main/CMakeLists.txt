@@ -1,8 +1,9 @@
 idf_component_register(
 	SRCS
-		"main.c"
 		"adc1.c"
 		"colors.c"
+		"main.c"
+		"registry.c"
 		"xinput.c"
 
 	INCLUDE_DIRS
@@ -14,4 +15,5 @@ idf_component_register(
 		led_strip
 		esp_adc
 		tinyusb
+		nvs_flash
 )

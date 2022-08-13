@@ -17,6 +17,7 @@
 
 #include "adc1.h"
 #include "colors.h"
+#include "registry.h"
 #include "xinput.h"
 
 #include "led_strip.h"
@@ -517,6 +518,7 @@ static void joy_loop(void *arg)
 
 void app_main(void)
 {
+	reg_init();
 	adc1_init();
 
 	gpio_config_t floating = {
