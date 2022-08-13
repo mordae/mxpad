@@ -482,7 +482,7 @@ static void joy_loop(void *arg)
 
 	while (1) {
 # if defined(CONFIG_JOY_L)
-#  if defined(CONFIG_JOY_L_INVERT_X
+#  if defined(CONFIG_JOY_L_INVERT_X)
 		int lx_sign = -1;
 #  else
 		int lx_sign = +1;
@@ -510,7 +510,7 @@ static void joy_loop(void *arg)
 # endif
 
 # if defined(CONFIG_JOY_R)
-#  if defined(CONFIG_JOY_R_INVERT_X
+#  if defined(CONFIG_JOY_R_INVERT_X)
 		int rx_sign = -1;
 #  else
 		int rx_sign = +1;
