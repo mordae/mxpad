@@ -320,17 +320,40 @@ static void light_sensor_loop(void *arg)
 static void button_loop(void *arg)
 {
 	gpio_config_t gpio = {
-		.pin_bit_mask = BIT64(CONFIG_BTN_A)
+		.pin_bit_mask = 0
+#if CONFIG_BTN_A != -1
+		              | BIT64(CONFIG_BTN_A)
+#endif
+#if CONFIG_BTN_B != -1
 		              | BIT64(CONFIG_BTN_B)
+#endif
+#if CONFIG_BTN_X != -1
 		              | BIT64(CONFIG_BTN_X)
+#endif
+#if CONFIG_BTN_Y != -1
 		              | BIT64(CONFIG_BTN_Y)
+#endif
+#if CONFIG_BTN_DOWN != -1
 		              | BIT64(CONFIG_BTN_DOWN)
+#endif
+#if CONFIG_BTN_RIGHT != -1
 		              | BIT64(CONFIG_BTN_RIGHT)
+#endif
+#if CONFIG_BTN_LEFT != -1
 		              | BIT64(CONFIG_BTN_LEFT)
+#endif
+#if CONFIG_BTN_UP != -1
 		              | BIT64(CONFIG_BTN_UP)
+#endif
+#if CONFIG_BTN_START != -1
 		              | BIT64(CONFIG_BTN_START)
+#endif
+#if CONFIG_BTN_SELECT != -1
 		              | BIT64(CONFIG_BTN_SELECT)
+#endif
+#if CONFIG_BTN_HOME != -1
 		              | BIT64(CONFIG_BTN_HOME)
+#endif
 #if defined(CONFIG_JOY_L_BTN)
 			      | BIT64(CONFIG_JOY_L_BTN)
 #endif
@@ -346,17 +369,39 @@ static void button_loop(void *arg)
 	ESP_ERROR_CHECK(gpio_config(&gpio));
 
 	while (1) {
+#if CONFIG_BTN_A != -1
 		state.btn_a = !gpio_get_level(CONFIG_BTN_A);
+#endif
+#if CONFIG_BTN_B != -1
 		state.btn_b = !gpio_get_level(CONFIG_BTN_B);
+#endif
+#if CONFIG_BTN_X != -1
 		state.btn_x = !gpio_get_level(CONFIG_BTN_X);
+#endif
+#if CONFIG_BTN_Y != -1
 		state.btn_y = !gpio_get_level(CONFIG_BTN_Y);
+#endif
+#if CONFIG_BTN_DOWN != -1
 		state.btn_down = !gpio_get_level(CONFIG_BTN_DOWN);
+#endif
+#if CONFIG_BTN_RIGHT != -1
 		state.btn_right = !gpio_get_level(CONFIG_BTN_RIGHT);
+#endif
+#if CONFIG_BTN_LEFT != -1
 		state.btn_left = !gpio_get_level(CONFIG_BTN_LEFT);
+#endif
+#if CONFIG_BTN_UP != -1
 		state.btn_up = !gpio_get_level(CONFIG_BTN_UP);
+#endif
+#if CONFIG_BTN_START != -1
 		state.btn_start = !gpio_get_level(CONFIG_BTN_START);
+#endif
+#if CONFIG_BTN_SELECT != -1
 		state.btn_select = !gpio_get_level(CONFIG_BTN_SELECT);
+#endif
+#if CONFIG_BTN_HOME != -1
 		state.btn_home = !gpio_get_level(CONFIG_BTN_HOME);
+#endif
 
 #if defined(CONFIG_JOY_L_BTN)
 		state.btn_j1 = !gpio_get_level(CONFIG_JOY_L_BTN);
@@ -400,34 +445,54 @@ static void joy_loop(void *arg)
 {
 	ESP_LOGI(tag, "Configure joysticks...");
 
-#if defined(CONFIG_JOY_L)
+# if defined(CONFIG_JOY_L)
 	configure_adc1_channel(CONFIG_JOY_L_CHAN_X);
 	configure_adc1_channel(CONFIG_JOY_L_CHAN_Y);
 	int cal_lx = 0, cal_ly = 0;
-#endif
+# endif
 
-#if defined(CONFIG_JOY_R)
+# if defined(CONFIG_JOY_R)
 	configure_adc1_channel(CONFIG_JOY_R_CHAN_X);
 	configure_adc1_channel(CONFIG_JOY_R_CHAN_Y);
 	int cal_rx = 0, cal_ry = 0;
-#endif
+# endif
+
+	gpio_config_t gpio = {
+		.pin_bit_mask = 0
+# if defined(CONFIG_JOY_L_BTN) && CONFIG_JOY_L_EN_GPIO != -1
+			      | BIT64(CONFIG_JOY_L_EN_GPIO)
+# endif
+# if defined(CONFIG_JOY_R_BTN) && CONFIG_JOY_R_EN_GPIO != -1
+			      | BIT64(CONFIG_JOY_R_EN_GPIO)
+# endif
+			      ,
+		.mode = GPIO_MODE_OUTPUT,
+	};
+	ESP_ERROR_CHECK(gpio_config(&gpio));
+
+# if defined(CONFIG_JOY_L_BTN)
+	ESP_ERROR_CHECK(gpio_set_level(CONFIG_JOY_L_EN_GPIO, 1));
+# endif
+# if defined(CONFIG_JOY_R_BTN)
+	ESP_ERROR_CHECK(gpio_set_level(CONFIG_JOY_R_EN_GPIO, 1));
+# endif
 
 	ESP_LOGI(tag, "Calibrate joysticks...");
 	int calibration = 30;
 
 	while (1) {
-#if defined(CONFIG_JOY_L)
-# if defined(CONFIG_JOY_L_INVERT_X
+# if defined(CONFIG_JOY_L)
+#  if defined(CONFIG_JOY_L_INVERT_X
 		int lx_sign = -1;
-# else
+#  else
 		int lx_sign = +1;
-# endif
+#  endif
 
-# if defined(CONFIG_JOY_L_INVERT_Y)
+#  if defined(CONFIG_JOY_L_INVERT_Y)
 		int ly_sign = -1;
-# else
+#  else
 		int ly_sign = +1;
-# endif
+#  endif
 
 		int lx = lx_sign * (read_adc1_channel(CONFIG_JOY_L_CHAN_X) - 4096) * 8;
 		int ly = ly_sign * (read_adc1_channel(CONFIG_JOY_L_CHAN_Y) - 4096) * 8;
@@ -442,20 +507,20 @@ static void joy_loop(void *arg)
 			state.lx = (3 * state.lx + lx) / 4;
 			state.ly = (3 * state.ly + ly) / 4;
 		}
-#endif
+# endif
 
-#if defined(CONFIG_JOY_R)
-# if defined(CONFIG_JOY_R_INVERT_X
+# if defined(CONFIG_JOY_R)
+#  if defined(CONFIG_JOY_R_INVERT_X
 		int rx_sign = -1;
-# else
+#  else
 		int rx_sign = +1;
-# endif
+#  endif
 
-# if defined(CONFIG_JOY_R_INVERT_Y)
+#  if defined(CONFIG_JOY_R_INVERT_Y)
 		int ry_sign = -1;
-# else
+#  else
 		int ry_sign = +1;
-# endif
+#  endif
 		int rx = rx_sign * (read_adc1_channel(CONFIG_JOY_R_CHAN_X) - 4096) * 8;
 		int ry = ry_sign * (read_adc1_channel(CONFIG_JOY_R_CHAN_Y) - 4096) * 8;
 
@@ -469,7 +534,7 @@ static void joy_loop(void *arg)
 			state.rx = (3 * state.rx + rx) / 4;
 			state.ry = (3 * state.ry + ry) / 4;
 		}
-#endif
+# endif
 
 		if (calibration > 0) {
 			calibration -= 1;
