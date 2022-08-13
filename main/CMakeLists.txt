@@ -1,6 +1,7 @@
 idf_component_register(
 	SRCS
 		"main.c"
+		"adc1.c"
 		"colors.c"
 		"xinput.c"
 
@@ -8,6 +9,7 @@ idf_component_register(
 		"."
 
 	PRIV_REQUIRES
+		soc
 		driver
 		led_strip
 		esp_adc

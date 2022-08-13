@@ -15,6 +15,7 @@
  */
 
 
+#include "adc1.h"
 #include "colors.h"
 #include "xinput.h"
 
@@ -24,17 +25,12 @@
 #include "freertos/task.h"
 
 #include "driver/gpio.h"
-#include "esp_adc/adc_oneshot.h"
 #include "esp_log.h"
 
 #include <string.h>
 
 
 static const char *tag = "main";
-
-
-/* Configured ADC1. */
-static adc_oneshot_unit_handle_t adc1;
 
 
 #if defined(CONFIG_LED)
@@ -54,40 +50,6 @@ static struct xinput_state state = {0};
 static struct xinput_state prev_state = {0};
 
 
-#if defined(CONFIG_LIGHT) || defined(CONFIG_JOY_L) || defined(CONFIG_JOY_R)
-static void configure_adc1_channel(int chan)
-{
-	adc_oneshot_chan_cfg_t config = {
-		.bitwidth = ADC_BITWIDTH_13,
-		.atten = ADC_ATTEN_DB_11,
-	};
-
-	ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1, chan, &config));
-}
-
-
-static int read_adc1_channel(int chan)
-{
-	int value = 0, raw;
-
-	for (int i = 0; i < 32; i++) {
-		esp_err_t res = adc_oneshot_read(adc1, chan, &raw);
-
-		if (res == ESP_ERR_TIMEOUT) {
-			ESP_LOGW(tag, "Timeout reading ADC1 channel %i", chan);
-			i--;
-			vTaskDelay(chan + 1);
-			continue;
-		}
-
-		value += raw;
-	}
-
-	return value >> 5;
-}
-#endif
-
-
 /*
  * Check if the new state differs sufficiently from the previous state
  * and if it does, send the new state to the host.
@@ -97,16 +59,16 @@ static void maybe_send(void)
 	if (state.buttons != prev_state.buttons)
 		goto send;
 
-	if (abs(state.lx - prev_state.lx) >= 128)
+	if (abs(state.lx - prev_state.lx) >= (ADC1_MAX >> 7))
 		goto send;
 
-	if (abs(state.ly - prev_state.ly) >= 128)
+	if (abs(state.ly - prev_state.ly) >= (ADC1_MAX >> 7))
 		goto send;
 
-	if (abs(state.rx - prev_state.rx) >= 128)
+	if (abs(state.rx - prev_state.rx) >= (ADC1_MAX >> 7))
 		goto send;
 
-	if (abs(state.ry - prev_state.ry) >= 128)
+	if (abs(state.ry - prev_state.ry) >= (ADC1_MAX >> 7))
 		goto send;
 
 	return;
@@ -303,12 +265,12 @@ alternate:
 static void light_sensor_loop(void *arg)
 {
 	ESP_LOGI(tag, "Configure light sensor...");
-	configure_adc1_channel(CONFIG_LIGHT_CHAN);
+	adc1_enable_channel(CONFIG_LIGHT_CHAN);
 
 	while (1) {
-		int value = read_adc1_channel(CONFIG_LIGHT_CHAN);
+		int value = adc1_read(CONFIG_LIGHT_CHAN);
 
-		float amount = 0.1f + 0.9f * value / 8191.0f;
+		float amount = 0.1f + 0.9f * value / (float)(ADC1_MAX);
 
 		ambient_light = 0.9f * ambient_light + 0.1f * amount;
 		vTaskDelay(pdMS_TO_TICKS(100));
@@ -446,14 +408,14 @@ static void joy_loop(void *arg)
 	ESP_LOGI(tag, "Configure joysticks...");
 
 # if defined(CONFIG_JOY_L)
-	configure_adc1_channel(CONFIG_JOY_L_CHAN_X);
-	configure_adc1_channel(CONFIG_JOY_L_CHAN_Y);
+	adc1_enable_channel(CONFIG_JOY_L_CHAN_X);
+	adc1_enable_channel(CONFIG_JOY_L_CHAN_Y);
 	int cal_lx = 0, cal_ly = 0;
 # endif
 
 # if defined(CONFIG_JOY_R)
-	configure_adc1_channel(CONFIG_JOY_R_CHAN_X);
-	configure_adc1_channel(CONFIG_JOY_R_CHAN_Y);
+	adc1_enable_channel(CONFIG_JOY_R_CHAN_X);
+	adc1_enable_channel(CONFIG_JOY_R_CHAN_Y);
 	int cal_rx = 0, cal_ry = 0;
 # endif
 
@@ -496,8 +458,8 @@ static void joy_loop(void *arg)
 		int ly_sign = +1;
 #  endif
 
-		int lx = lx_sign * (read_adc1_channel(CONFIG_JOY_L_CHAN_X) - 4096) * 8;
-		int ly = ly_sign * (read_adc1_channel(CONFIG_JOY_L_CHAN_Y) - 4096) * 8;
+		int lx = lx_sign * (adc1_read(CONFIG_JOY_L_CHAN_X) - 4096) * 8;
+		int ly = ly_sign * (adc1_read(CONFIG_JOY_L_CHAN_Y) - 4096) * 8;
 
 		if (calibration > 0) {
 			cal_lx = (7 * cal_lx + lx) / 8;
@@ -523,8 +485,8 @@ static void joy_loop(void *arg)
 #  else
 		int ry_sign = +1;
 #  endif
-		int rx = rx_sign * (read_adc1_channel(CONFIG_JOY_R_CHAN_X) - 4096) * 8;
-		int ry = ry_sign * (read_adc1_channel(CONFIG_JOY_R_CHAN_Y) - 4096) * 8;
+		int rx = rx_sign * (adc1_read(CONFIG_JOY_R_CHAN_X) - 4096) * 8;
+		int ry = ry_sign * (adc1_read(CONFIG_JOY_R_CHAN_Y) - 4096) * 8;
 
 		if (calibration > 0) {
 			cal_rx = (7 * cal_rx + rx) / 8;
@@ -555,12 +517,7 @@ static void joy_loop(void *arg)
 
 void app_main(void)
 {
-	ESP_LOGI(tag, "Configure ADC1...");
-	adc_oneshot_unit_init_cfg_t adc1_config = {
-		.unit_id = ADC_UNIT_1,
-		.ulp_mode = false,
-	};
-	ESP_ERROR_CHECK(adc_oneshot_new_unit(&adc1_config, &adc1));
+	adc1_init();
 
 	gpio_config_t floating = {
 		.pin_bit_mask = 0
