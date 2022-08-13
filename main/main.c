@@ -468,7 +468,9 @@ static void joy_loop(void *arg)
 			      ,
 		.mode = GPIO_MODE_OUTPUT,
 	};
-	ESP_ERROR_CHECK(gpio_config(&gpio));
+
+	if (gpio.pin_bit_mask)
+		ESP_ERROR_CHECK(gpio_config(&gpio));
 
 # if defined(CONFIG_JOY_L_EN_GPIO)
 	ESP_ERROR_CHECK(gpio_set_level(CONFIG_JOY_L_EN_GPIO, 1));
@@ -560,15 +562,160 @@ void app_main(void)
 	};
 	ESP_ERROR_CHECK(adc_oneshot_new_unit(&adc1_config, &adc1));
 
-	ESP_LOGI(tag, "GPIO 21/26/33 hack...");
-	gpio_config_t hack = {
-		.pin_bit_mask = BIT64(21) | BIT64(26) | BIT64(33),
+	gpio_config_t floating = {
+		.pin_bit_mask = 0
+#if defined(CONFIG_FLOAT_GPIO_0)
+		              | BIT64(0)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_1)
+		              | BIT64(1)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_2)
+		              | BIT64(2)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_3)
+		              | BIT64(3)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_4)
+		              | BIT64(4)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_5)
+		              | BIT64(5)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_6)
+		              | BIT64(6)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_7)
+		              | BIT64(7)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_8)
+		              | BIT64(8)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_9)
+		              | BIT64(9)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_10)
+		              | BIT64(10)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_11)
+		              | BIT64(11)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_12)
+		              | BIT64(12)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_13)
+		              | BIT64(13)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_14)
+		              | BIT64(14)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_15)
+		              | BIT64(15)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_16)
+		              | BIT64(16)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_17)
+		              | BIT64(17)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_18)
+		              | BIT64(18)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_19)
+		              | BIT64(19)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_20)
+		              | BIT64(20)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_21)
+		              | BIT64(21)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_22)
+		              | BIT64(22)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_23)
+		              | BIT64(23)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_24)
+		              | BIT64(24)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_25)
+		              | BIT64(25)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_26)
+		              | BIT64(26)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_27)
+		              | BIT64(27)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_28)
+		              | BIT64(28)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_29)
+		              | BIT64(29)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_30)
+		              | BIT64(30)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_31)
+		              | BIT64(31)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_32)
+		              | BIT64(32)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_33)
+		              | BIT64(33)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_34)
+		              | BIT64(34)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_35)
+		              | BIT64(35)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_36)
+		              | BIT64(36)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_37)
+		              | BIT64(37)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_38)
+		              | BIT64(38)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_39)
+		              | BIT64(39)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_40)
+		              | BIT64(40)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_41)
+		              | BIT64(41)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_42)
+		              | BIT64(42)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_43)
+		              | BIT64(43)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_44)
+		              | BIT64(44)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_45)
+		              | BIT64(45)
+#endif
+#if defined(CONFIG_FLOAT_GPIO_46)
+		              | BIT64(46)
+#endif
+		              ,
 		.intr_type = GPIO_INTR_DISABLE,
 		.mode = GPIO_MODE_INPUT,
 		.pull_down_en = 0,
 		.pull_up_en = 0,
 	};
-	ESP_ERROR_CHECK(gpio_config(&hack));
+
+	if (floating.pin_bit_mask) {
+		ESP_LOGI(tag, "Configure floating GPIO pins 0x%llx...", floating.pin_bit_mask);
+		ESP_ERROR_CHECK(gpio_config(&floating));
+	}
 
 #if defined(CONFIG_LIGHT)
 	xTaskCreate(light_sensor_loop, "light_sensor_loop", 4096, NULL, 0, NULL);

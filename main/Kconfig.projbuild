@@ -165,4 +165,193 @@ menu "MXPAD"
 			range -1 46
 	endmenu
 
+	menu "Floating GPIO Pins"
+		config FLOAT_GPIO_0
+			bool "Float GPIO 0"
+			default n
+
+		config FLOAT_GPIO_1
+			bool "Float GPIO 1"
+			default n
+
+		config FLOAT_GPIO_2
+			bool "Float GPIO 2"
+			default n
+
+		config FLOAT_GPIO_3
+			bool "Float GPIO 3"
+			default n
+
+		config FLOAT_GPIO_4
+			bool "Float GPIO 4"
+			default n
+
+		config FLOAT_GPIO_5
+			bool "Float GPIO 5"
+			default n
+
+		config FLOAT_GPIO_6
+			bool "Float GPIO 6"
+			default n
+
+		config FLOAT_GPIO_7
+			bool "Float GPIO 7"
+			default n
+
+		config FLOAT_GPIO_8
+			bool "Float GPIO 8"
+			default n
+
+		config FLOAT_GPIO_9
+			bool "Float GPIO 9"
+			default n
+
+		config FLOAT_GPIO_10
+			bool "Float GPIO 10"
+			default n
+
+		config FLOAT_GPIO_11
+			bool "Float GPIO 11"
+			default n
+
+		config FLOAT_GPIO_12
+			bool "Float GPIO 12"
+			default n
+
+		config FLOAT_GPIO_13
+			bool "Float GPIO 13"
+			default n
+
+		config FLOAT_GPIO_14
+			bool "Float GPIO 14"
+			default n
+
+		config FLOAT_GPIO_15
+			bool "Float GPIO 15"
+			default n
+
+		config FLOAT_GPIO_16
+			bool "Float GPIO 16"
+			default n
+
+		config FLOAT_GPIO_17
+			bool "Float GPIO 17"
+			default n
+
+		config FLOAT_GPIO_18
+			bool "Float GPIO 18"
+			default n
+
+		config FLOAT_GPIO_19
+			bool "Float GPIO 19"
+			default n
+
+		config FLOAT_GPIO_20
+			bool "Float GPIO 20"
+			default n
+
+		config FLOAT_GPIO_21
+			bool "Float GPIO 21"
+			default n
+
+		config FLOAT_GPIO_22
+			bool "Float GPIO 22"
+			default n
+
+		config FLOAT_GPIO_23
+			bool "Float GPIO 23"
+			default n
+
+		config FLOAT_GPIO_24
+			bool "Float GPIO 24"
+			default n
+
+		config FLOAT_GPIO_25
+			bool "Float GPIO 25"
+			default n
+
+		config FLOAT_GPIO_26
+			bool "Float GPIO 26"
+			default n
+
+		config FLOAT_GPIO_27
+			bool "Float GPIO 27"
+			default n
+
+		config FLOAT_GPIO_28
+			bool "Float GPIO 28"
+			default n
+
+		config FLOAT_GPIO_29
+			bool "Float GPIO 29"
+			default n
+
+		config FLOAT_GPIO_30
+			bool "Float GPIO 30"
+			default n
+
+		config FLOAT_GPIO_31
+			bool "Float GPIO 31"
+			default n
+
+		config FLOAT_GPIO_32
+			bool "Float GPIO 32"
+			default n
+
+		config FLOAT_GPIO_33
+			bool "Float GPIO 33"
+			default n
+
+		config FLOAT_GPIO_34
+			bool "Float GPIO 34"
+			default n
+
+		config FLOAT_GPIO_35
+			bool "Float GPIO 35"
+			default n
+
+		config FLOAT_GPIO_36
+			bool "Float GPIO 36"
+			default n
+
+		config FLOAT_GPIO_37
+			bool "Float GPIO 37"
+			default n
+
+		config FLOAT_GPIO_38
+			bool "Float GPIO 38"
+			default n
+
+		config FLOAT_GPIO_39
+			bool "Float GPIO 39"
+			default n
+
+		config FLOAT_GPIO_40
+			bool "Float GPIO 40"
+			default n
+
+		config FLOAT_GPIO_41
+			bool "Float GPIO 41"
+			default n
+
+		config FLOAT_GPIO_42
+			bool "Float GPIO 42"
+			default n
+
+		config FLOAT_GPIO_43
+			bool "Float GPIO 43"
+			default n
+
+		config FLOAT_GPIO_44
+			bool "Float GPIO 44"
+			default n
+
+		config FLOAT_GPIO_45
+			bool "Float GPIO 45"
+			default n
+
+		config FLOAT_GPIO_46
+			bool "Float GPIO 46"
+			default n
+	endmenu
 endmenu
