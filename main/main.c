@@ -321,37 +321,37 @@ static void button_loop(void *arg)
 {
 	gpio_config_t gpio = {
 		.pin_bit_mask = 0
-#if CONFIG_BTN_A != -1
+#if CONFIG_BTN_A >= 0
 		              | BIT64(CONFIG_BTN_A)
 #endif
-#if CONFIG_BTN_B != -1
+#if CONFIG_BTN_B >= 0
 		              | BIT64(CONFIG_BTN_B)
 #endif
-#if CONFIG_BTN_X != -1
+#if CONFIG_BTN_X >= 0
 		              | BIT64(CONFIG_BTN_X)
 #endif
-#if CONFIG_BTN_Y != -1
+#if CONFIG_BTN_Y >= 0
 		              | BIT64(CONFIG_BTN_Y)
 #endif
-#if CONFIG_BTN_DOWN != -1
+#if CONFIG_BTN_DOWN >= 0
 		              | BIT64(CONFIG_BTN_DOWN)
 #endif
-#if CONFIG_BTN_RIGHT != -1
+#if CONFIG_BTN_RIGHT >= 0
 		              | BIT64(CONFIG_BTN_RIGHT)
 #endif
-#if CONFIG_BTN_LEFT != -1
+#if CONFIG_BTN_LEFT >= 0
 		              | BIT64(CONFIG_BTN_LEFT)
 #endif
-#if CONFIG_BTN_UP != -1
+#if CONFIG_BTN_UP >= 0
 		              | BIT64(CONFIG_BTN_UP)
 #endif
-#if CONFIG_BTN_START != -1
+#if CONFIG_BTN_START >= 0
 		              | BIT64(CONFIG_BTN_START)
 #endif
-#if CONFIG_BTN_SELECT != -1
+#if CONFIG_BTN_SELECT >= 0
 		              | BIT64(CONFIG_BTN_SELECT)
 #endif
-#if CONFIG_BTN_HOME != -1
+#if CONFIG_BTN_HOME >= 0
 		              | BIT64(CONFIG_BTN_HOME)
 #endif
 #if defined(CONFIG_JOY_L_BTN)
@@ -369,37 +369,37 @@ static void button_loop(void *arg)
 	ESP_ERROR_CHECK(gpio_config(&gpio));
 
 	while (1) {
-#if CONFIG_BTN_A != -1
+#if CONFIG_BTN_A >= 0
 		state.btn_a = !gpio_get_level(CONFIG_BTN_A);
 #endif
-#if CONFIG_BTN_B != -1
+#if CONFIG_BTN_B >= 0
 		state.btn_b = !gpio_get_level(CONFIG_BTN_B);
 #endif
-#if CONFIG_BTN_X != -1
+#if CONFIG_BTN_X >= 0
 		state.btn_x = !gpio_get_level(CONFIG_BTN_X);
 #endif
-#if CONFIG_BTN_Y != -1
+#if CONFIG_BTN_Y >= 0
 		state.btn_y = !gpio_get_level(CONFIG_BTN_Y);
 #endif
-#if CONFIG_BTN_DOWN != -1
+#if CONFIG_BTN_DOWN >= 0
 		state.btn_down = !gpio_get_level(CONFIG_BTN_DOWN);
 #endif
-#if CONFIG_BTN_RIGHT != -1
+#if CONFIG_BTN_RIGHT >= 0
 		state.btn_right = !gpio_get_level(CONFIG_BTN_RIGHT);
 #endif
-#if CONFIG_BTN_LEFT != -1
+#if CONFIG_BTN_LEFT >= 0
 		state.btn_left = !gpio_get_level(CONFIG_BTN_LEFT);
 #endif
-#if CONFIG_BTN_UP != -1
+#if CONFIG_BTN_UP >= 0
 		state.btn_up = !gpio_get_level(CONFIG_BTN_UP);
 #endif
-#if CONFIG_BTN_START != -1
+#if CONFIG_BTN_START >= 0
 		state.btn_start = !gpio_get_level(CONFIG_BTN_START);
 #endif
-#if CONFIG_BTN_SELECT != -1
+#if CONFIG_BTN_SELECT >= 0
 		state.btn_select = !gpio_get_level(CONFIG_BTN_SELECT);
 #endif
-#if CONFIG_BTN_HOME != -1
+#if CONFIG_BTN_HOME >= 0
 		state.btn_home = !gpio_get_level(CONFIG_BTN_HOME);
 #endif
 
@@ -459,10 +459,10 @@ static void joy_loop(void *arg)
 
 	gpio_config_t gpio = {
 		.pin_bit_mask = 0
-# if defined(CONFIG_JOY_L_BTN) && CONFIG_JOY_L_EN_GPIO != -1
+# if defined(CONFIG_JOY_L_EN_GPIO) && CONFIG_JOY_L_EN_GPIO >= 0
 			      | BIT64(CONFIG_JOY_L_EN_GPIO)
 # endif
-# if defined(CONFIG_JOY_R_BTN) && CONFIG_JOY_R_EN_GPIO != -1
+# if defined(CONFIG_JOY_R_EN_GPIO) && CONFIG_JOY_R_EN_GPIO >= 0
 			      | BIT64(CONFIG_JOY_R_EN_GPIO)
 # endif
 			      ,
@@ -470,10 +470,10 @@ static void joy_loop(void *arg)
 	};
 	ESP_ERROR_CHECK(gpio_config(&gpio));
 
-# if defined(CONFIG_JOY_L_BTN)
+# if defined(CONFIG_JOY_L_EN_GPIO)
 	ESP_ERROR_CHECK(gpio_set_level(CONFIG_JOY_L_EN_GPIO, 1));
 # endif
-# if defined(CONFIG_JOY_R_BTN)
+# if defined(CONFIG_JOY_R_EN_GPIO)
 	ESP_ERROR_CHECK(gpio_set_level(CONFIG_JOY_R_EN_GPIO, 1));
 # endif
 
