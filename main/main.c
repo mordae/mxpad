@@ -17,6 +17,7 @@
 
 #include "adc1.h"
 #include "colors.h"
+#include "hid.h"
 #include "registry.h"
 #include "xinput.h"
 
@@ -51,12 +52,30 @@ static struct xinput_state state = {0};
 static struct xinput_state prev_state = {0};
 
 
+/* Type of the USB device. */
+enum usbdev_type {
+	USBDEV_XINPUT = 0,
+	USBDEV_HID    = 1,
+};
+
+/* Current USB device type. */
+static enum usbdev_type usbdev = USBDEV_XINPUT;
+
+
 /*
  * Check if the new state differs sufficiently from the previous state
  * and if it does, send the new state to the host.
  */
 static void maybe_send(void)
 {
+	if (state.btn_j1 && state.btn_start) {
+		/* Special combo to change controller input type. */
+		ESP_LOGI(tag, "Change USB device type...");
+		reg_set_int("usbdev", !usbdev);
+		esp_restart();
+		return;
+	}
+
 	if (state.buttons != prev_state.buttons)
 		goto send;
 
@@ -92,7 +111,12 @@ send:
 		 state.btn_j2 ? "2" : "");
 
 	memcpy(&prev_state, &state, sizeof(state));
-	xinput_send_state(&state);
+
+	if (USBDEV_XINPUT == usbdev) {
+		xinput_send_state(&state);
+	} else if (USBDEV_HID == usbdev) {
+		hid_send_state(&state);
+	}
 }
 
 
@@ -519,6 +543,8 @@ static void joy_loop(void *arg)
 void app_main(void)
 {
 	reg_init();
+	usbdev = reg_get_int("usbdev", USBDEV_XINPUT);
+
 	adc1_init();
 
 	gpio_config_t floating = {
@@ -690,7 +716,12 @@ void app_main(void)
 #endif
 
 	xTaskCreate(button_loop, "button_loop", 4096, NULL, 0, NULL);
-	xTaskCreate(xinput_loop, "xinput_loop", 4096, NULL, 0, NULL);
+
+	if (USBDEV_XINPUT == usbdev) {
+		xTaskCreate(xinput_loop, "xinput_loop", 4096, NULL, 0, NULL);
+	} else if (USBDEV_HID == usbdev) {
+		xTaskCreate(hid_loop, "hid_loop", 4096, NULL, 0, NULL);
+	}
 
 	while (1) {
 		vTaskDelay(pdMS_TO_TICKS(10000));

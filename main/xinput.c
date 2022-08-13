@@ -15,6 +15,7 @@
  */
 
 #include "xinput.h"
+#include "registry.h"
 
 #if !defined(CFG_TUSB_DEBUG)
 #define CFG_TUSB_DEBUG CONFIG_USB_DEBUG_LEVEL
@@ -260,6 +261,12 @@ static usbd_class_driver_t const xinput_driver = {
  */
 usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count)
 {
+	if (0 != reg_get_int("usbdev", 0)) {
+		ESP_LOGI(tag, "Disabled.");
+		*driver_count = 0;
+		return NULL;
+	}
+
 	ESP_LOGI(tag, "Registered Device Class Driver");
 	*driver_count = 1;
 	return &xinput_driver;

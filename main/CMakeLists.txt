@@ -2,6 +2,7 @@ idf_component_register(
 	SRCS
 		"adc1.c"
 		"colors.c"
+		"hid.c"
 		"main.c"
 		"registry.c"
 		"xinput.c"

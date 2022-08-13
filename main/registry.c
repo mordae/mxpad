@@ -21,14 +21,21 @@
 #include "nvs.h"
 
 
-const char *tag = "registry";
+static const char *tag = "registry";
 
 
+static volatile bool initialized = false;
 static nvs_handle_t handle;
 
 
 void reg_init(void)
 {
+	if (initialized) {
+		return;
+	} else {
+		initialized = true;
+	}
+
 	ESP_LOGI(tag, "Initialize NVS...");
 
 	esp_err_t err = nvs_flash_init();
@@ -47,12 +54,16 @@ void reg_init(void)
 
 void reg_set_int(const char *name, int value)
 {
+	reg_init();
 	ESP_ERROR_CHECK(nvs_set_i32(handle, name, value));
+	ESP_ERROR_CHECK(nvs_commit(handle));
 }
 
 
 int reg_get_int(const char *name, int dfl)
 {
+	reg_init();
+
 	int32_t value = dfl;
 	esp_err_t err = nvs_get_i32(handle, name, &value);
 
