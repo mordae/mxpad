@@ -17,25 +17,38 @@
 #include "adc1.h"
 
 #include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 #include "freertos/task.h"
 
 #include "esp_log.h"
+#include "esp_random.h"
 #include "esp_adc/adc_oneshot.h"
 
 
+/* Logging tag. */
 static const char *tag = "adc1";
 
 
+/* ADC1 handle. */
 static adc_oneshot_unit_handle_t adc1;
+
+
+/* Mutex to protect against concurrent access. */
+static SemaphoreHandle_t mutex;
+static StaticSemaphore_t mutex_buffer;
 
 
 void adc1_init(void)
 {
 	ESP_LOGI(tag, "Configure ADC1...");
+
+	mutex = xSemaphoreCreateMutexStatic(&mutex_buffer);
+
 	adc_oneshot_unit_init_cfg_t adc1_config = {
 		.unit_id = ADC_UNIT_1,
 		.ulp_mode = false,
 	};
+
 	ESP_ERROR_CHECK(adc_oneshot_new_unit(&adc1_config, &adc1));
 }
 
@@ -47,7 +60,9 @@ void adc1_enable_channel(int chan)
 		.atten = ADC_ATTEN_DB_11,
 	};
 
+	xSemaphoreTake(mutex, portMAX_DELAY);
 	ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1, chan, &config));
+	xSemaphoreGive(mutex);
 }
 
 
@@ -55,13 +70,15 @@ int adc1_read(int chan)
 {
 	int value = 0, raw;
 
+	xSemaphoreTake(mutex, portMAX_DELAY);
+
 	for (int i = 0; i < 32; i++) {
 		esp_err_t err = adc_oneshot_read(adc1, chan, &raw);
 
 		if (err == ESP_ERR_TIMEOUT) {
 			ESP_LOGW(tag, "Timeout reading ADC1 channel %i", chan);
 			i--;
-			vTaskDelay(1);
+			vTaskDelay(esp_random() & 0b11111);
 			continue;
 		} else {
 			ESP_ERROR_CHECK(err);
@@ -69,6 +86,8 @@ int adc1_read(int chan)
 
 		value += raw;
 	}
+
+	xSemaphoreGive(mutex);
 
 	return value >> 5;
 }
