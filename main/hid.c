@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "xinput.h"
+#include "hid.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -79,7 +79,7 @@ void hid_loop(void *arg)
 }
 
 
-void hid_send_state(struct xinput_state *state)
+void hid_send_state(const struct xinput_state *state, const struct hid_input_map *map)
 {
 	/* Do nothing unless ready. */
 	if (!tud_mounted())
@@ -90,22 +90,29 @@ void hid_send_state(struct xinput_state *state)
 		tud_remote_wakeup();
 
 	int idx = 0;
-	uint8_t keycode[16] = {};
+	uint8_t keycode[32] = {};
 
-	if (state->btn_a)	keycode[idx++] = HID_KEY_A;
-	if (state->btn_b)	keycode[idx++] = HID_KEY_B;
-	if (state->btn_x)	keycode[idx++] = HID_KEY_X;
-	if (state->btn_y)	keycode[idx++] = HID_KEY_Y;
+	if (state->btn_a && map->btn_a)
+		keycode[idx++] = map->btn_a;
 
-	if (state->lx >= 16383)
-		keycode[idx++] = HID_KEY_ARROW_RIGHT;
-	else if (state->lx <= -16383)
-		keycode[idx++] = HID_KEY_ARROW_LEFT;
+	if (state->btn_b && map->btn_b)
+		keycode[idx++] = map->btn_b;
 
-	if (state->ly >= 16383)
-		keycode[idx++] = HID_KEY_ARROW_UP;
-	else if (state->ly <= -16383)
-		keycode[idx++] = HID_KEY_ARROW_DOWN;
+	if (state->btn_start && map->btn_start)
+		keycode[idx++] = map->btn_start;
+
+	if (state->btn_select && map->btn_select)
+		keycode[idx++] = map->btn_select;
+
+	if (state->lx >= 16383 && map->lx_right)
+		keycode[idx++] = map->lx_right;
+	else if (state->lx <= -16383 && map->lx_left)
+		keycode[idx++] = map->lx_left;
+
+	if (state->ly >= 16383 && map->ly_up)
+		keycode[idx++] = map->ly_up;
+	else if (state->ly <= -16383 && map->ly_down)
+		keycode[idx++] = map->ly_down;
 
 	tud_hid_keyboard_report(HID_ITF_PROTOCOL_KEYBOARD, 0, keycode);
 }

@@ -44,6 +44,9 @@ static volatile float ambient_light = 1.0;
 /* LED pattern from host. And the previous one. */
 static volatile enum xinput_led led_pattern = XINPUT_LED_SPIN;
 static volatile enum xinput_led led_pattern_prev = XINPUT_LED_OFF;
+
+static void led_off(void);
+static void led_set_hue(float hue);
 #endif
 
 
@@ -55,11 +58,39 @@ static struct xinput_state prev_state = {0};
 /* Type of the USB device. */
 enum usbdev_type {
 	USBDEV_XINPUT = 0,
-	USBDEV_HID    = 1,
+	USBDEV_HID1   = 1,
+	USBDEV_HID2   = 2,
+	USBDEV_MAX    = 3,
 };
 
 /* Current USB device type. */
 static enum usbdev_type usbdev = USBDEV_XINPUT;
+
+
+/* Input map for the 1st player. */
+struct hid_input_map hid_player1 = {
+	.btn_a      = HID_KEY_ENTER,
+	.btn_b      = HID_KEY_F1,
+	.btn_start  = HID_KEY_F2,
+	.btn_select = HID_KEY_ESCAPE,
+	.lx_left    = HID_KEY_ARROW_LEFT,
+	.lx_right   = HID_KEY_ARROW_RIGHT,
+	.ly_up      = HID_KEY_ARROW_UP,
+	.ly_down    = HID_KEY_ARROW_DOWN,
+};
+
+
+/* Input map for the 2nd player. */
+struct hid_input_map hid_player2 = {
+	.btn_a      = HID_KEY_CONTROL_LEFT,
+	.btn_b      = HID_KEY_F1,
+	.btn_start  = HID_KEY_F2,
+	.btn_select = HID_KEY_ESCAPE,
+	.lx_left    = HID_KEY_A,
+	.lx_right   = HID_KEY_D,
+	.ly_up      = HID_KEY_W,
+	.ly_down    = HID_KEY_X,
+};
 
 
 /*
@@ -71,7 +102,10 @@ static void maybe_send(void)
 	if (state.btn_j1 && state.btn_start) {
 		/* Special combo to change controller input type. */
 		ESP_LOGI(tag, "Change USB device type...");
-		reg_set_int("usbdev", !usbdev);
+		reg_set_int("usbdev", (usbdev + 1) % USBDEV_MAX);
+#if defined(CONFIG_LED)
+		led_off();
+#endif
 		esp_restart();
 		return;
 	}
@@ -114,8 +148,10 @@ send:
 
 	if (USBDEV_XINPUT == usbdev) {
 		xinput_send_state(&state);
-	} else if (USBDEV_HID == usbdev) {
-		hid_send_state(&state);
+	} else if (USBDEV_HID1 == usbdev) {
+		hid_send_state(&state, &hid_player1);
+	} else if (USBDEV_HID2 == usbdev) {
+		hid_send_state(&state, &hid_player2);
 	}
 }
 
@@ -194,9 +230,9 @@ blink:
 	goto next;
 
 flash1:
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < 4; i++) {
 		led_set_hue(green);
-		vTaskDelay(pdMS_TO_TICKS(400));
+		vTaskDelay(pdMS_TO_TICKS(100));
 		led_off();
 		vTaskDelay(pdMS_TO_TICKS(100));
 	}
@@ -208,9 +244,9 @@ just1:
 	goto next;
 
 flash2:
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < 4; i++) {
 		led_set_hue(red);
-		vTaskDelay(pdMS_TO_TICKS(400));
+		vTaskDelay(pdMS_TO_TICKS(100));
 		led_off();
 		vTaskDelay(pdMS_TO_TICKS(100));
 	}
@@ -222,9 +258,9 @@ just2:
 	goto next;
 
 flash3:
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < 4; i++) {
 		led_set_hue(blue);
-		vTaskDelay(pdMS_TO_TICKS(400));
+		vTaskDelay(pdMS_TO_TICKS(100));
 		led_off();
 		vTaskDelay(pdMS_TO_TICKS(100));
 	}
@@ -236,9 +272,9 @@ just3:
 	goto next;
 
 flash4:
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < 4; i++) {
 		led_set_hue(yellow);
-		vTaskDelay(pdMS_TO_TICKS(400));
+		vTaskDelay(pdMS_TO_TICKS(100));
 		led_off();
 		vTaskDelay(pdMS_TO_TICKS(100));
 	}
@@ -719,7 +755,15 @@ void app_main(void)
 
 	if (USBDEV_XINPUT == usbdev) {
 		xTaskCreate(xinput_loop, "xinput_loop", 4096, NULL, 0, NULL);
-	} else if (USBDEV_HID == usbdev) {
+	} else if (USBDEV_HID1 == usbdev) {
+#if defined(CONFIG_LED)
+		led_pattern = XINPUT_LED_FLASH1;
+#endif
+		xTaskCreate(hid_loop, "hid_loop", 4096, NULL, 0, NULL);
+	} else if (USBDEV_HID2 == usbdev) {
+#if defined(CONFIG_LED)
+		led_pattern = XINPUT_LED_FLASH3;
+#endif
 		xTaskCreate(hid_loop, "hid_loop", 4096, NULL, 0, NULL);
 	}
 
