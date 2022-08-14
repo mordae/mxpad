@@ -495,10 +495,10 @@ static void joy_loop(void *arg)
 	if (gpio.pin_bit_mask)
 		ESP_ERROR_CHECK(gpio_config(&gpio));
 
-# if defined(CONFIG_JOY_L_EN_GPIO)
+# if defined(CONFIG_JOY_L_EN_GPIO) && CONFIG_JOY_L_EN_GPIO >= 0
 	ESP_ERROR_CHECK(gpio_set_level(CONFIG_JOY_L_EN_GPIO, 1));
 # endif
-# if defined(CONFIG_JOY_R_EN_GPIO)
+# if defined(CONFIG_JOY_R_EN_GPIO) && CONFIG_JOY_R_EN_GPIO >= 0
 	ESP_ERROR_CHECK(gpio_set_level(CONFIG_JOY_R_EN_GPIO, 1));
 # endif
 
