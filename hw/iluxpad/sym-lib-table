@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name "MXPAD")(type "KiCad")(uri "${KIPRJMOD}/Library.kicad_sym")(options "")(descr ""))
+)
