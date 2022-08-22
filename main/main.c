@@ -58,38 +58,74 @@ static struct xinput_state prev_state = {0};
 /* Type of the USB device. */
 enum usbdev_type {
 	USBDEV_XINPUT = 0,
-	USBDEV_HID1   = 1,
-	USBDEV_HID2   = 2,
-	USBDEV_MAX    = 3,
+	USBDEV_TUNNELER_1,
+	USBDEV_TUNNELER_2,
+	USBDEV_TYRIAN_1,
+	USBDEV_MAX,
 };
 
 /* Current USB device type. */
 static enum usbdev_type usbdev = USBDEV_XINPUT;
 
 
-/* Input map for the 1st player. */
-struct hid_input_map hid_player1 = {
+/* Input map for the 1st player of tunneler. */
+struct hid_input_map hid_tunneler_1 = {
 	.btn_a      = HID_KEY_ENTER,
 	.btn_b      = HID_KEY_F1,
+
 	.btn_start  = HID_KEY_F2,
 	.btn_select = HID_KEY_ESCAPE,
-	.lx_left    = HID_KEY_ARROW_LEFT,
-	.lx_right   = HID_KEY_ARROW_RIGHT,
-	.ly_up      = HID_KEY_ARROW_UP,
-	.ly_down    = HID_KEY_ARROW_DOWN,
+
+	.btn_left   = HID_KEY_ARROW_LEFT,
+	.btn_right  = HID_KEY_ARROW_RIGHT,
+	.btn_up     = HID_KEY_ARROW_UP,
+	.btn_down   = HID_KEY_ARROW_DOWN,
+
+	.j1_left    = HID_KEY_ARROW_LEFT,
+	.j1_right   = HID_KEY_ARROW_RIGHT,
+	.j1_up      = HID_KEY_ARROW_UP,
+	.j1_down    = HID_KEY_ARROW_DOWN,
 };
 
 
-/* Input map for the 2nd player. */
-struct hid_input_map hid_player2 = {
+/* Input map for the 2nd player of tunneler. */
+struct hid_input_map hid_tunneler_2 = {
 	.btn_a      = HID_KEY_CONTROL_LEFT,
 	.btn_b      = HID_KEY_F1,
+
 	.btn_start  = HID_KEY_F2,
 	.btn_select = HID_KEY_ESCAPE,
-	.lx_left    = HID_KEY_A,
-	.lx_right   = HID_KEY_D,
-	.ly_up      = HID_KEY_W,
-	.ly_down    = HID_KEY_X,
+
+	.btn_left   = HID_KEY_A,
+	.btn_right  = HID_KEY_D,
+	.btn_up     = HID_KEY_W,
+	.btn_down   = HID_KEY_X,
+
+	.j1_left    = HID_KEY_A,
+	.j1_right   = HID_KEY_D,
+	.j1_up      = HID_KEY_W,
+	.j1_down    = HID_KEY_X,
+};
+
+
+struct hid_input_map hid_tyrian_1 = {
+	.btn_a      = HID_KEY_ENTER,
+	.btn_b      = HID_KEY_SPACE,
+	.btn_x      = HID_KEY_CONTROL_LEFT,
+	.btn_y      = HID_KEY_ALT_LEFT,
+
+	.btn_start  = HID_KEY_ENTER,
+	.btn_select = HID_KEY_ESCAPE,
+
+	.btn_left   = HID_KEY_ARROW_LEFT,
+	.btn_right  = HID_KEY_ARROW_RIGHT,
+	.btn_up     = HID_KEY_ARROW_UP,
+	.btn_down   = HID_KEY_ARROW_DOWN,
+
+	.j1_left    = HID_KEY_ARROW_LEFT,
+	.j1_right   = HID_KEY_ARROW_RIGHT,
+	.j1_up      = HID_KEY_ARROW_UP,
+	.j1_down    = HID_KEY_ARROW_DOWN,
 };
 
 
@@ -148,10 +184,12 @@ send:
 
 	if (USBDEV_XINPUT == usbdev) {
 		xinput_send_state(&state);
-	} else if (USBDEV_HID1 == usbdev) {
-		hid_send_state(&state, &hid_player1);
-	} else if (USBDEV_HID2 == usbdev) {
-		hid_send_state(&state, &hid_player2);
+	} else if (USBDEV_TUNNELER_1 == usbdev) {
+		hid_send_state(&state, &hid_tunneler_1);
+	} else if (USBDEV_TUNNELER_2 == usbdev) {
+		hid_send_state(&state, &hid_tunneler_2);
+	} else if (USBDEV_TYRIAN_1 == usbdev) {
+		hid_send_state(&state, &hid_tyrian_1);
 	}
 }
 
@@ -755,14 +793,19 @@ void app_main(void)
 
 	if (USBDEV_XINPUT == usbdev) {
 		xTaskCreate(xinput_loop, "xinput_loop", 4096, NULL, 0, NULL);
-	} else if (USBDEV_HID1 == usbdev) {
+	} else if (USBDEV_TUNNELER_1 == usbdev) {
 #if defined(CONFIG_LED)
 		led_pattern = XINPUT_LED_FLASH1;
 #endif
 		xTaskCreate(hid_loop, "hid_loop", 4096, NULL, 0, NULL);
-	} else if (USBDEV_HID2 == usbdev) {
+	} else if (USBDEV_TUNNELER_2 == usbdev) {
 #if defined(CONFIG_LED)
 		led_pattern = XINPUT_LED_FLASH3;
+#endif
+		xTaskCreate(hid_loop, "hid_loop", 4096, NULL, 0, NULL);
+	} else if (USBDEV_TYRIAN_1 == usbdev) {
+#if defined(CONFIG_LED)
+		led_pattern = XINPUT_LED_FLASH2;
 #endif
 		xTaskCreate(hid_loop, "hid_loop", 4096, NULL, 0, NULL);
 	}

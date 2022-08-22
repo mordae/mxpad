@@ -98,21 +98,42 @@ void hid_send_state(const struct xinput_state *state, const struct hid_input_map
 	if (state->btn_b && map->btn_b)
 		keycode[idx++] = map->btn_b;
 
+	if (state->btn_x && map->btn_x)
+		keycode[idx++] = map->btn_x;
+
+	if (state->btn_y && map->btn_y)
+		keycode[idx++] = map->btn_y;
+
+	if (state->btn_up && map->btn_up)
+		keycode[idx++] = map->btn_up;
+
+	if (state->btn_down && map->btn_down)
+		keycode[idx++] = map->btn_down;
+
+	if (state->btn_left && map->btn_left)
+		keycode[idx++] = map->btn_left;
+
+	if (state->btn_right && map->btn_right)
+		keycode[idx++] = map->btn_right;
+
 	if (state->btn_start && map->btn_start)
 		keycode[idx++] = map->btn_start;
 
 	if (state->btn_select && map->btn_select)
 		keycode[idx++] = map->btn_select;
 
-	if (state->lx >= 16383 && map->lx_right)
-		keycode[idx++] = map->lx_right;
-	else if (state->lx <= -16383 && map->lx_left)
-		keycode[idx++] = map->lx_left;
+	if (state->btn_home && map->btn_home)
+		keycode[idx++] = map->btn_home;
 
-	if (state->ly >= 16383 && map->ly_up)
-		keycode[idx++] = map->ly_up;
-	else if (state->ly <= -16383 && map->ly_down)
-		keycode[idx++] = map->ly_down;
+	if (state->lx >= 16383 && map->j1_right)
+		keycode[idx++] = map->j1_right;
+	else if (state->lx <= -16383 && map->j1_left)
+		keycode[idx++] = map->j1_left;
+
+	if (state->ly >= 16383 && map->j1_up)
+		keycode[idx++] = map->j1_up;
+	else if (state->ly <= -16383 && map->j1_down)
+		keycode[idx++] = map->j1_down;
 
 	tud_hid_keyboard_report(HID_ITF_PROTOCOL_KEYBOARD, 0, keycode);
 }

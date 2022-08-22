@@ -38,10 +38,8 @@ struct hid_input_map {
 	uint8_t btn_y;
 	uint8_t lt;
 	uint8_t rt;
-	uint8_t lx_left, lx_right;
-	uint8_t ly_up, ly_down;
-	uint8_t rx_left, rx_right;
-	uint8_t ry_up, ry_down;
+	uint8_t j1_left, j1_right, j1_up, j1_down;
+	uint8_t j2_left, j2_right, j2_up, j2_down;
 };
 
 
