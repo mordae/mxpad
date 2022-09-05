@@ -61,6 +61,7 @@ enum usbdev_type {
 	USBDEV_TUNNELER_1,
 	USBDEV_TUNNELER_2,
 	USBDEV_TYRIAN_1,
+	USBDEV_RAPTOR_1,
 	USBDEV_MAX,
 };
 
@@ -113,6 +114,27 @@ struct hid_input_map hid_tyrian_1 = {
 	.btn_b      = HID_KEY_SPACE,
 	.btn_x      = HID_KEY_CONTROL_LEFT,
 	.btn_y      = HID_KEY_ALT_LEFT,
+
+	.btn_start  = HID_KEY_ENTER,
+	.btn_select = HID_KEY_ESCAPE,
+
+	.btn_left   = HID_KEY_ARROW_LEFT,
+	.btn_right  = HID_KEY_ARROW_RIGHT,
+	.btn_up     = HID_KEY_ARROW_UP,
+	.btn_down   = HID_KEY_ARROW_DOWN,
+
+	.j1_left    = HID_KEY_ARROW_LEFT,
+	.j1_right   = HID_KEY_ARROW_RIGHT,
+	.j1_up      = HID_KEY_ARROW_UP,
+	.j1_down    = HID_KEY_ARROW_DOWN,
+};
+
+
+struct hid_input_map hid_raptor_1 = {
+	.btn_a      = HID_KEY_CONTROL_LEFT,
+	.btn_b      = HID_KEY_ALT_LEFT,
+	.btn_x      = HID_KEY_ENTER,
+	.btn_y      = HID_KEY_SPACE,
 
 	.btn_start  = HID_KEY_ENTER,
 	.btn_select = HID_KEY_ESCAPE,
@@ -190,6 +212,8 @@ send:
 		hid_send_state(&state, &hid_tunneler_2);
 	} else if (USBDEV_TYRIAN_1 == usbdev) {
 		hid_send_state(&state, &hid_tyrian_1);
+	} else if (USBDEV_RAPTOR_1 == usbdev) {
+		hid_send_state(&state, &hid_raptor_1);
 	}
 }
 
@@ -806,6 +830,11 @@ void app_main(void)
 	} else if (USBDEV_TYRIAN_1 == usbdev) {
 #if defined(CONFIG_LED)
 		led_pattern = XINPUT_LED_FLASH2;
+#endif
+		xTaskCreate(hid_loop, "hid_loop", 4096, NULL, 0, NULL);
+	} else if (USBDEV_RAPTOR_1 == usbdev) {
+#if defined(CONFIG_LED)
+		led_pattern = XINPUT_LED_FLASH4;
 #endif
 		xTaskCreate(hid_loop, "hid_loop", 4096, NULL, 0, NULL);
 	}
